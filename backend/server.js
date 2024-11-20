@@ -4,13 +4,20 @@ const bodyParser = require('body-parser');
 const { Client } = require('pg');  // PostgreSQL client
 require("dotenv").config({path:"./conf.env"});
 
+C_DB_USER = process.env.DB_USER || 'postgres';
+C_DB_HOST = process.env.DB_HOST || 'localhost';
+C_DB_NAME = process.env.DB_NAME || 'usermanagement';
+C_DB_PASS = process.env.DB_PASS || 'master';
+C_DB_PORT = process.env.DB_PORT || 5432;
+
+
 // PostgreSQL client setup
 const client = new Client({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASS,
-    port: process.env.DB_PORT, 
+    user: C_DB_USER,
+    host: C_DB_HOST,
+    database: C_DB_NAME,
+    password: C_DB_PASS,
+    port: C_DB_PORT, 
 });
 
 client.connect(); // Establish connection to the database
