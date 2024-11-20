@@ -47,7 +47,7 @@ const ListUser = (props) => {
 	)
 }
 
-export default function HomePage() {
+export default function TestHomePage() {
 	const [users, setUsers] = useState([]);
 
 	useEffect(() => {

@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import axios from 'axios';
 import LoginContext from "../context/login-context";
 import left_chevron from './../resources/chevron-left-small.svg';
@@ -240,6 +240,7 @@ export default function ProfilePage() {
   const { id } = useParams();
   const [userData, setUserData] = useState(null);
   const { user, purchases, vehicles, paymentCreds } = userData || {};
+  // eslint-disable-next-line
   const [isLoggedIn, setIsLoggedIn, _, setUser] = useContext(LoginContext);
 
   useEffect(() => {

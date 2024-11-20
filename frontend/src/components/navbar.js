@@ -4,11 +4,8 @@ import LoginContext from "../context/login-context";
 
 // displays the navbar
 export default function Navbar() {
+	// eslint-disable-next-line
 	const { isLoggedIn, setIsLoggedIn, user } = useContext(LoginContext);
-
-	const handleLogout = () => {
-		setIsLoggedIn(false);
-	};
 
 	if (isLoggedIn === true) {
 		return (

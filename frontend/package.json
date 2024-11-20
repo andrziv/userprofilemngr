@@ -1,5 +1,5 @@
 {
-  "name": "userprofilemngr",
+  "name": "frontend",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -7,20 +7,15 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.7",
-    "body-parser": "^1.20.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.21.1",
-    "node": "^18.20.5",
-    "pg": "^8.13.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.27.0",
+    "react-router-dom": "^6.28.0",
     "react-scripts": "5.0.1",
+    "tailwindcss": "^3.4.15",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "node src/backend/server.js & react-scripts start",
+    "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -44,8 +39,7 @@
     ]
   },
   "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "7.21.11",
-    "@babel/plugin-transform-private-property-in-object": "^7.25.9",
-    "tailwindcss": "^3.4.14"
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@babel/plugin-transform-private-property-in-object": "^7.25.9"
   }
 }

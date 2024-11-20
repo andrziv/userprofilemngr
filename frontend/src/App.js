@@ -4,7 +4,7 @@ import React, {useState} from "react";
 import {Route, Routes} from "react-router-dom";
 
 import Navbar from "./components/navbar";
-import HomePage from './components/home';
+import TestHomePage from './components/test_home';
 import ProfilePage from './components/profile';
 
 import {LoginProvider} from "./context/login-context";
@@ -19,7 +19,7 @@ function App() {
             <div className='grid absolute top-20 h-fit w-full'>
                 <div className="rounded-3xl shadow-2xl w-5/6 bg-gray-100 justify-self-center items-center py-6">
                     <Routes>
-                        <Route exact path="/" element={<HomePage/>}/>
+                        <Route path="/" element={<TestHomePage/>}/>
                         <Route path="/profile/:id" element={<ProfilePage/>}/>
                     </Routes>
                 </div>
