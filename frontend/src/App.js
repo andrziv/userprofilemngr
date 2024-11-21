@@ -6,6 +6,7 @@ import {Route, Routes} from "react-router-dom";
 import Navbar from "./components/navbar";
 import TestHomePage from './components/test_home';
 import ProfilePage from './components/profile';
+import VehicleCatalogPage from './components/vehicle_catalog';
 
 import {LoginProvider} from "./context/login-context";
 
@@ -21,6 +22,7 @@ function App() {
                     <Routes>
                         <Route path="/" element={<TestHomePage/>}/>
                         <Route path="/profile/:id" element={<ProfilePage/>}/>
+                        <Route path="/catalog/:id" element={<VehicleCatalogPage/>}/>
                     </Routes>
                 </div>
             </div>

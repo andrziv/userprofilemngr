@@ -9,7 +9,7 @@ export default function Navbar() {
 
 	if (isLoggedIn === true) {
 		return (
-			<nav className="bg-white border-gray-200 dark:bg-gray-900">
+			<nav className="border-gray-200 bg-gray-900">
 				<div className="flex flex-wrap justify-between mx-auto p-4 h-40">
 					<a href="http://localhost:3000/" className="flex justify-self-center items-center space-x-3 h-1/5 rtl:space-x-reverse">
 						<img src="https://flowbite.com/docs/images/logo.svg" className="h-8" alt="FleetRewards Logo" />
@@ -27,7 +27,7 @@ export default function Navbar() {
 		);
 	} else {
 		return (
-			<nav className="bg-white border-gray-200 dark:bg-gray-900">
+			<nav className="border-gray-200 bg-gray-900">
 				<div className="flex flex-wrap justify-between mx-auto p-4 h-40">
 					<a href="http://localhost:3000/" className="flex justify-self-end items-center space-x-3 h-1/5 rtl:space-x-reverse">
 						<img src="https://flowbite.com/docs/images/logo.svg" className="h-8" alt="FleetRewards Logo" />

@@ -2,14 +2,14 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const { Client } = require('pg');  // PostgreSQL client
-require("dotenv").config({path:"./conf.env"});
+// require("dotenv").config({path:"./conf.env"});
+require("dotenv").config({path:"./conf_local.env"});
 
 C_DB_USER = process.env.PGUSER || 'postgres';
 C_DB_HOST = process.env.PGHOST || 'localhost';
 C_DB_NAME = process.env.DB_NAME || 'usermanagement';
 C_DB_PASS = process.env.PGPASSWORD || 'master';
 C_DB_PORT = process.env.PGPORT || 5432;
-
 
 // PostgreSQL client setup
 const client = new Client({
@@ -28,6 +28,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+// Get basic info on all users
 app.get('/api/users', async (req, res) => {
     try {
         const result = await client.query('SELECT users.* , name as company_name FROM users INNER JOIN companies ON users.company_id = companies.id');
@@ -38,13 +39,45 @@ app.get('/api/users', async (req, res) => {
     }
 });
 
-// Route to get user details (fetch from SQL database)
+// Route to get user details via email (fetch from SQL database)
+app.get('/api/users/alt/:email', async (req, res) => {
+  try {
+      const email = req.params.email;
+      const userResult = await client.query(`SELECT users.* , name as company_name FROM users INNER JOIN companies ON users.company_id = companies.id WHERE users.email = '${email}'`);
+      const userId = userResult.rows[0].id;
+      const purchasesResult = await client.query('SELECT * FROM purchases WHERE user_id = $1', [userId]);
+      const vehiclesResult = await client.query(`SELECT vehicle.* , vehicle_ownership.id as ownership_id FROM vehicle   
+                                                INNER JOIN vehicle_ownership 
+                                                ON vehicle_ownership.vehicle_id = vehicle.id 
+                                                  INNER JOIN companies 
+                                                  ON vehicle_ownership.company_id = companies.id 
+                                                    WHERE companies.id = ${userResult.rows[0].company_id}`);
+      const paymentCredsResult = await client.query('SELECT * FROM payment_credentials WHERE user_id = $1', [userId]);
+
+      res.json({
+          user: userResult.rows[0],
+          purchases: purchasesResult.rows.map((row) => ({...row, purchase_date: row.purchase_date.toISOString().substring(0, 10)})),
+          vehicles: vehiclesResult.rows,
+          paymentCreds: paymentCredsResult.rows,
+      });
+  } catch (err) {
+  console.error(err);
+  res.status(500).send('Database error');
+  }
+});
+
+// Route to get user details via ID (fetch from SQL database)
 app.get('/api/users/:id', async (req, res) => {
     try {
         const userId = req.params.id;
         const userResult = await client.query('SELECT users.* , name as company_name FROM users INNER JOIN companies ON users.company_id = companies.id WHERE users.id = $1', [userId]);
         const purchasesResult = await client.query('SELECT * FROM purchases WHERE user_id = $1', [userId]);
-        const vehiclesResult = await client.query('SELECT * FROM vehicles WHERE company_id = $1', [userResult.rows[0].company_id]);
+        const vehiclesResult = await client.query(`SELECT vehicle.* , vehicle_ownership.id as ownership_id FROM vehicle   
+                                                  INNER JOIN vehicle_ownership 
+                                                  ON vehicle_ownership.vehicle_id = vehicle.id 
+                                                    INNER JOIN companies 
+                                                    ON vehicle_ownership.company_id = companies.id 
+                                                      WHERE companies.id = ${userResult.rows[0].company_id}`);
         const paymentCredsResult = await client.query('SELECT * FROM payment_credentials WHERE user_id = $1', [userId]);
 
         res.json({
@@ -57,25 +90,6 @@ app.get('/api/users/:id', async (req, res) => {
     console.error(err);
     res.status(500).send('Database error');
     }
-});
-
-// Update user details
-app.put("/api/user/:userId", async (req, res) => {
-  const userId = parseInt(req.params.userId);
-  const { firstName, lastName, email, phone, employeeRole } = req.body;
-  try {
-    const result = await client.query(
-      `UPDATE "UserProfile"
-      SET "FirstName" = $1, "LastName" = $2, "EmailAddress" = $3, "PhoneNumber" = $4, "EmployeeRole" = $5
-      WHERE "UserID" = $6 RETURNING *`,
-      [firstName, lastName, email, phone, employeeRole, userId]
-    );
-    if (result.rows.length === 0) return res.status(404).send("User not found");
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error("Error updating user:", err);
-    res.status(500).send("Database query error");
-  }
 });
 
 // Route to update user contact info (update SQL database)
@@ -102,43 +116,6 @@ app.put('/api/user/contact/:id', async (req, res) => {
         console.error('Error updating user contact info:', err);
         res.status(500).send('Internal server error');
     }
-});
-
-// Create a new user
-// Haven't tested yet
-app.post("/api/user", async (req, res) => {
-  const { firstName, lastName, email, phone, companyId, employeeRole, loyaltyPoints } = req.body;
-  try {
-    const result = await client.query(
-      `INSERT INTO users (last_name, first_name, email, phone_number, company_id, role, loyalty_points)
-      VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [lastName, firstName, email, phone, companyId, employeeRole, loyaltyPoints]
-    );
-    const id_get_response = await client.query(`SELECT id FROM users WHERE email = '${email}';`)
-    const id = id_get_response.rows[0].id;
-    console.log(`New user created with ID: ${id}`);
-    const payment_create_result = await client.query(`INSERT INTO payment_credentials (user_id) VALUES (${id}) RETURNING *`);
-
-    const combo_json = {...result.rows[0], ...payment_create_result[0]}
-    res.status(201).json(combo_json);
-  } catch (err) {
-    console.error("Error creating user: or payment credentials", err);
-    res.status(500).send("Database query error");
-  }
-});
-
-// Delete a user
-// Doesn't work because we'd need to remove any existence of the ID in other tables. Tbh we don't need the ability to delete users.
-app.delete("/api/user/:userId", async (req, res) => {
-  const userId = parseInt(req.params.userId);
-  try {
-    const result = await client.query('DELETE FROM users WHERE id = $1 RETURNING *', [userId]);
-    if (result.rows.length === 0) return res.status(404).send("User not found");
-    res.json({ message: "User deleted successfully", user: result.rows[0] });
-  } catch (err) {
-    console.error("Error deleting user:", err);
-    res.status(500).send("Database query error");
-  }
 });
 
 // Route to update payment details (update SQL database)
@@ -169,69 +146,54 @@ app.put("/api/user/:userId/payment", async (req, res) => {
   }
 });
 
+// Route to create a new user
+app.post("/api/user", async (req, res) => {
+  const { firstName, lastName, email, phone, companyId, employeeRole, loyaltyPoints } = req.body;
+  try {
+    const result = await client.query(
+      `INSERT INTO users (last_name, first_name, email, phone_number, company_id, role, loyalty_points)
+      VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [lastName, firstName, email, phone, companyId, employeeRole, loyaltyPoints]
+    );
+    const id_get_response = await client.query(`SELECT id FROM users WHERE email = '${email}'`)
+    const id = id_get_response.rows[0].id;
+    console.log(`New user created with ID: ${id}`);
+    const payment_create_result = await client.query(`INSERT INTO payment_credentials (user_id) VALUES (${id}) RETURNING *`);
+
+    const combo_json = {...result.rows[0], ...payment_create_result[0]}
+    res.status(201).json(combo_json);
+  } catch (err) {
+    console.error("Error creating user: or payment credentials", err);
+    res.status(500).send("Database query error");
+  }
+});
+
+// Delete a user
+// Doesn't work because we'd need to remove any existence of the ID in other tables. Tbh we don't need the ability to delete users.
+app.delete("/api/user/:userId", async (req, res) => {
+  const userId = parseInt(req.params.userId);
+  try {
+    const result = await client.query('DELETE FROM users WHERE id = $1 RETURNING *', [userId]);
+    if (result.rows.length === 0) return res.status(404).send("User not found");
+    res.json({ message: "User deleted successfully", user: result.rows[0] });
+  } catch (err) {
+    console.error("Error deleting user:", err);
+    res.status(500).send("Database query error");
+  }
+});
+
 // Get payment credentials for a user
 // Haven't tested yet
 app.get("/api/user/:userId/payment", async (req, res) => {
   const userId = parseInt(req.params.userId);
   try {
-    const result = await client.query('SELECT * FROM "PaymentCredential" WHERE "Owner" = $1', [userId]);
+    const result = await client.query(`SELECT * FROM payment_credential WHERE user_id = '${userId}'`);
     if (result.rows.length === 0) return res.status(404).send("No payment credentials found");
     res.json(result.rows);
   } catch (err) {
     console.error("Error fetching payment credentials:", err);
     res.status(500).send("Database query error");
   }
-});
-
-// Add payment credentials
-// Haven't tested yet
-app.post("/api/user/:userId/payment", async (req, res) => {
-  const userId = parseInt(req.params.userId);
-  const { accountNumber, cvv, expiryDate, accountType, address } = req.body;
-  try {
-    const result = await client.query(
-      `INSERT INTO "PaymentCredential" 
-      ("AccountNumber", "CVV", "ExpiryDate", "AccountType", "Address", "Owner") 
-      VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [accountNumber, cvv, expiryDate, accountType, address, userId]
-    );
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    console.error("Error adding payment credentials:", err);
-    res.status(500).send("Database query error");
-  }
-});
-
-// Delete payment credentials
-// Haven't tested yet
-app.delete("/api/user/:userId/payment", async (req, res) => {
-  const userId = parseInt(req.params.userId);
-  try {
-    const result = await client.query('DELETE FROM "PaymentCredential" WHERE "Owner" = $1 RETURNING *', [userId]);
-    if (result.rows.length === 0) return res.status(404).send("Payment credentials not found");
-    res.json({ message: "Payment credentials deleted successfully", credentials: result.rows[0] });
-  } catch (err) {
-    console.error("Error deleting payment credentials:", err);
-    res.status(500).send("Database query error");
-  }
-});
-// Route to get company vehicles (fetch from SQL database)
-app.get('/api/user/vehicles/:id', async (req, res) => {
-    const companyId = parseInt(req.params.id);
-
-    try {
-        // Query the database for user's vehicles
-        const result = await client.query('SELECT * FROM vehicles WHERE company_id = $1', [companyId]);
-
-        if (result.rows.length > 0) {
-        res.json(result.rows);
-        } else {
-        res.status(404).send('No vehicles found for this company');
-        }
-    } catch (err) {
-        console.error('Error fetching vehicles:', err);
-        res.status(500).send('Internal server error');
-    }
 });
 
 // Route to get user purchase history (fetch from SQL database)
@@ -267,6 +229,71 @@ app.put('/api/user/loyalty/:id', async (req, res) => {
         console.error('Error updating loyalty points:', err);
         res.status(500).send('Internal server error');
     }
+});
+
+// Route to get company vehicles (fetch from SQL database)
+app.get('/api/user/vehicles/:id', async (req, res) => {
+  const companyId = parseInt(req.params.id);
+
+  try {
+      // Query the database for user's vehicles
+      const result = await client.query(`SELECT vehicle.* , vehicle_ownership.id as ownership_id FROM vehicle   
+                                          INNER JOIN vehicle_ownership 
+                                          ON vehicle_ownership.vehicle_id = vehicle.id 
+                                            INNER JOIN companies 
+                                            ON vehicle_ownership.company_id = companies.id 
+                                              WHERE companies.id = ${companyId}`);
+
+      if (result.rows.length > 0) {
+        res.json(result.rows);
+      } else {
+        res.status(404).send('No vehicles found for this company');
+      }
+  } catch (err) {
+      console.error('Error fetching vehicles:', err);
+      res.status(500).send('Internal server error');
+  }
+});
+
+// Route to remove vehicle ownership for a company
+app.delete('/api/company/vehicles/:id', async (req, res) => {
+  const ownershipId = parseInt(req.params.id);
+
+  try {
+      // Delete the vehicle from the company's ownership record
+      console.log(`Attempt to delete vehicle with ownership ID of ${ownershipId}`)
+      const result = await client.query(`DELETE FROM vehicle_ownership WHERE id = ${ownershipId}`);
+      res.status(202).send('Vehicle deleted.');
+  } catch (err) {
+      console.error('Error deleting vehicle:', err);
+      res.status(500).send('Internal server error');
+  }
+});
+
+// Route to register a new vehicle to a company's fleet
+app.post("/api/company/new_vehicle", async (req, res) => {
+  const { vehicle_id, company_id } = req.body;
+  try {
+    const result = await client.query(
+      `insert into vehicle_ownership (vehicle_id, company_id) values (${vehicle_id}, ${company_id}) RETURNING *`
+    );
+
+    res.status(201).json(result);
+  } catch (err) {
+    console.error("Error adding vehicle to company fleet.", err);
+    res.status(500).send("Database query error");
+  }
+});
+
+// Route to get all of FleetRewards' available vehicles (vehicle catalogue)
+app.get('/api/catalogue/vehicle', async (req, res) => {
+  try {
+      const result = await client.query('SELECT * FROM vehicle');
+      res.json(result.rows);
+      } catch (err) {
+          console.error(err);
+          res.status(500).send('Database error');
+  }
 });
 
 // Server setup
