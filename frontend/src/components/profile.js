@@ -6,9 +6,13 @@ import { CompanyDetails } from "./widget/CompanyDetails";
 import { PaymentForm } from "./widget/PaymentForm";
 import { ContactInfoForm } from "./widget/ContactInfoForm";
 import { ListVehicleDel } from "./widget/ListVehicle";
-import { ListPurchase } from "./widget/ListPurchase";
+import { PurchaseLogs } from "./widget/PurchaseLogs";
+import { ActivityLogs } from "./widget/ActivityLogs";
+import { RedeemableGoods } from "./widget/Redeemables";
 
 import left_chevron from './../resources/chevron-left-small.svg';
+
+const server_addr = (process.env.REACT_APP_ENVIRO === 'development') ? 'http://localhost:5000' : 'https://fleetrewards-copy-1-group2.up.railway.app';
 
 export default function ProfilePage() {
     const { id } = useParams();
@@ -19,7 +23,7 @@ export default function ProfilePage() {
 
     // Grab all the data needed by the page and load them into the react state variables.
     useEffect(() => {
-        axios.get(`http://localhost:5000/api/users/${id}`)
+        axios.get(`${server_addr}/api/users/${id}`)
           .then(response => {
               setUserData(response.data);
               setVehicles(response.data.vehicles);
@@ -35,13 +39,13 @@ export default function ProfilePage() {
 
     // Delete the element from the vehicle listing when the user clicks on the button.
     const updateVehicles = (id) => {
-        axios.delete(`http://localhost:5000/api/company/vehicles/${id}`)
+        axios.delete(`${server_addr}/api/company/vehicles/${id}`)
         .then(response => {
             console.log(response);
             if (vehicles.length === 1) {
               setVehicles([]);
             } else {
-              axios.get(`http://localhost:5000/api/user/vehicles/${userData.user.company_id}`)
+              axios.get(`${server_addr}/api/user/vehicles/${userData.user.company_id}`)
               .then(response => {
                   console.log(response);
                   setVehicles(response.data);
@@ -80,13 +84,10 @@ export default function ProfilePage() {
                 {paymentCreds.map(paymentCred => <PaymentForm key={paymentCred.id} pay_cred={paymentCred} user={user} />)}
                 <ContactInfoForm user={user} />
             </div>
-            <div className="rounded-2xl shadow-2xl bg-white w-5/6 h-50 space-y-4 pt-6">
-                <div className='border-l-8 border-yellow-400 bg-gray-100 font-bold px-6 mb-6 w-fit'>
-                    <h2>Purchase History</h2>
-                </div>
-                <div className="rounded-2xl bg-gray-800 p-4 space-y-2 bg-center bg-repeat-round" style={{ backgroundSize: 100, backgroundImage: `url(${left_chevron})` }}>
-                    {purchases.map(purchase => <ListPurchase key={purchase.id} purchase={purchase} />)}
-                </div>
+            <RedeemableGoods user={user} />
+            <div className="rounded-2xl shadow-2xl bg-white w-5/6 h-50 space-y-8 pt-6">
+                <PurchaseLogs user={user} />
+                <ActivityLogs user={user} />
             </div>
         </div>
     );

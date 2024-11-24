@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from 'axios';
 
+const server_addr = (process.env.REACT_APP_ENVIRO === 'development') ? 'http://localhost:5000' : 'https://fleetrewards-copy-1-group2.up.railway.app';
+
 export const ContactInfoForm = ({ user }) => {
     const [email, setEmail] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
@@ -15,7 +17,7 @@ export const ContactInfoForm = ({ user }) => {
     async function onSubmit(e) {
       e.preventDefault();
       try {
-        const response = await axios.put(`http://localhost:5000/api/user/contact/${user.id}`, {
+        const response = await axios.put(`${server_addr}/api/user/contact/${user.id}`, {
           email: email,
           phone_number: phoneNumber
         });

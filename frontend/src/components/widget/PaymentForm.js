@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from 'axios';
 
+const server_addr = (process.env.REACT_APP_ENVIRO === 'development') ? 'http://localhost:5000' : 'https://fleetrewards-copy-1-group2.up.railway.app';
+
 export const PaymentForm = ({ pay_cred, user }) => {
     const [cardNumber, setCardNumber] = useState('');
     const [expirationDate, setExpirationDate] = useState('');
@@ -21,7 +23,7 @@ export const PaymentForm = ({ pay_cred, user }) => {
     async function onSubmit(e) {
       e.preventDefault();
       try {
-        const response = await axios.put(`http://localhost:5000/api/user/${user.id}/payment`, {
+        const response = await axios.put(`${server_addr}/api/user/${user.id}/payment`, {
           card_number: cardNumber,
           cvv: cvv,
           expiration_date: expirationDate,
@@ -87,7 +89,7 @@ export const PaymentForm = ({ pay_cred, user }) => {
                 className="w-full py-3 px-4 border border-gray-400 rounded-lg focus:outline-none focus:border-blue-500"
               />
             </div>
-            <div className="col-span-2 sm:col-span-1">
+            <div className="col-span-2">
               <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">Address</label>
               <input
                 type="text"

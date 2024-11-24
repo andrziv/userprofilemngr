@@ -9,13 +9,15 @@ import React, {useContext, useState, useEffect} from "react";
 import {useNavigate} from "react-router";
 import LoginContext from "../context/login-context";
 
+const server_addr = (process.env.REACT_APP_ENVIRO === 'development') ? 'http://localhost:5000' : 'https://fleetrewards-copy-1-group2.up.railway.app';
+
 const ListUser = (props) => {
 	// eslint-disable-next-line
 	const[isLoggedIn, setIsLoggedIn, _, setUser] = useContext(LoginContext);
 	const navigate = useNavigate();
 	const { user } = props;
 
-	function becomeUser() {
+	async function becomeUser() {
 		setIsLoggedIn(true);
 		setUser(user);
 		console.log(`Became user ${user.first_name}.`);
@@ -51,7 +53,7 @@ export default function TestHomePage() {
 	const [users, setUsers] = useState([]);
 
 	useEffect(() => {
-		axios.get('http://localhost:5000/api/users')
+		axios.get(`${server_addr}/api/users`)
 		.then(response => {
 			setUsers(response.data);
 		})

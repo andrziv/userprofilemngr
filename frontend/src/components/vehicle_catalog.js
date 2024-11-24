@@ -5,6 +5,8 @@ import { ListVehicleAdd } from "./widget/ListVehicle";
 
 import left_chevron from './../resources/chevron-left-small.svg';
 
+const server_addr = (process.env.REACT_APP_ENVIRO === 'development') ? 'http://localhost:5000' : 'https://fleetrewards-copy-1-group2.up.railway.app';
+
 export default function VehicleCatalogPage() {  
     const { id } = useParams();
     const [userData, setUserData] = useState(null);
@@ -13,14 +15,14 @@ export default function VehicleCatalogPage() {
 
     // Grab the user's data and the vehicle data in the catalog from database.
     useEffect(() => {
-        axios.get(`http://localhost:5000/api/users/${id}`)
+        axios.get(`${server_addr}/api/users/${id}`)
         .then(response => {
               setUserData(response.data);
           })
           .catch(error => {
               console.error('Error fetching user data:', error);
         });
-        axios.get(`http://localhost:5000/api/catalogue/vehicle`)
+        axios.get(`${server_addr}/api/catalogue/vehicle`)
         .then(response => {
             setVehicles(response.data);
         })
@@ -36,7 +38,7 @@ export default function VehicleCatalogPage() {
     // Add the vehicle from the vehicle listing to the user's company when the user clicks on the button.
     const updateVehicles = (id) => {
         console.log(id, user.company_id)
-        axios.post(`http://localhost:5000/api/company/new_vehicle`, {vehicle_id: id, company_id: user.company_id})
+        axios.post(`${server_addr}/api/company/new_vehicle`, {vehicle_id: id, company_id: user.company_id})
         .then(response => {
             console.log(response);
         })

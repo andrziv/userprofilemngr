@@ -11,7 +11,7 @@ export default function Navbar() {
 		return (
 			<nav className="border-gray-200 bg-gray-900">
 				<div className="flex flex-wrap justify-between mx-auto p-4 h-40">
-					<a href="http://localhost:3000/" className="flex justify-self-center items-center space-x-3 h-1/5 rtl:space-x-reverse">
+					<a href="/" className="flex justify-self-center items-center space-x-3 h-1/5 rtl:space-x-reverse">
 						<img src="https://flowbite.com/docs/images/logo.svg" className="h-8" alt="FleetRewards Logo" />
 						<span className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">FleetRewards</span>
 					</a>
@@ -29,7 +29,7 @@ export default function Navbar() {
 		return (
 			<nav className="border-gray-200 bg-gray-900">
 				<div className="flex flex-wrap justify-between mx-auto p-4 h-40">
-					<a href="http://localhost:3000/" className="flex justify-self-end items-center space-x-3 h-1/5 rtl:space-x-reverse">
+					<a href="/" className="flex justify-self-end items-center space-x-3 h-1/5 rtl:space-x-reverse">
 						<img src="https://flowbite.com/docs/images/logo.svg" className="h-8" alt="FleetRewards Logo" />
 						<span className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">FleetRewards</span>
 					</a>
